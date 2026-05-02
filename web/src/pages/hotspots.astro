@@ -1,0 +1,651 @@
+---
+const { searchParams } = Astro.url;
+const page = parseInt(searchParams.get('page') || '1');
+const pageSize = 20;
+---
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>热点列表 - AI热点监控</title>
+    <style>
+        *, *::before, *::after {
+            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+        }
+
+        .dark body {
+            background-color: #0f172a;
+            color: #e2e8f0;
+        }
+
+        .dark .bg-gray-50 {
+            background-color: #0f172a;
+        }
+
+        .dark .bg-white {
+            background-color: #1e293b;
+        }
+
+        .dark .text-gray-800 {
+            color: #f1f5f9;
+        }
+
+        .dark .text-gray-700 {
+            color: #e2e8f0;
+        }
+
+        .dark .text-gray-600 {
+            color: #cbd5e1;
+        }
+
+        .dark .text-gray-500 {
+            color: #94a3b8;
+        }
+
+        .dark .border-gray-200 {
+            border-color: #334155;
+        }
+
+        .dark .border-gray-100 {
+            border-color: #334155;
+        }
+
+        .dark .border-gray-300 {
+            border-color: #475569;
+        }
+
+        .dark .bg-gray-100 {
+            background-color: #334155;
+        }
+
+        .dark .bg-gray-50 {
+            background-color: #1e293b;
+        }
+
+        .dark .hover\:bg-gray-100:hover {
+            background-color: #334155;
+        }
+
+        .dark .hover\:bg-gray-50:hover {
+            background-color: #1e293b;
+        }
+
+        .dark .hover\:bg-gray-200:hover {
+            background-color: #475569;
+        }
+
+        .dark select, .dark input {
+            background-color: #1e293b;
+            color: #e2e8f0;
+            border-color: #475569;
+        }
+
+        .dark select option {
+            background-color: #1e293b;
+            color: #e2e8f0;
+        }
+
+        .dark .bg-black {
+            background-color: rgba(0, 0, 0, 0.7) !important;
+        }
+
+        /* 主题切换按钮 */
+        .theme-toggle {
+            position: relative;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        .dark .theme-toggle:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .theme-icon {
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            position: absolute;
+        }
+
+        .theme-icon.sun {
+            opacity: 1;
+            transform: rotate(0deg) scale(1);
+        }
+
+        .theme-icon.moon {
+            opacity: 0;
+            transform: rotate(90deg) scale(0.5);
+        }
+
+        .dark .theme-icon.sun {
+            opacity: 0;
+            transform: rotate(-90deg) scale(0.5);
+        }
+
+        .dark .theme-icon.moon {
+            opacity: 1;
+            transform: rotate(0deg) scale(1);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <nav class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center space-x-8">
+                    <a href="/" class="text-xl font-bold text-primary-600">🤖 AI热点监控</a>
+                    <div class="flex space-x-4">
+                        <a href="/" class="text-gray-600 hover:text-primary-600 px-3 py-2">仪表盘</a>
+                        <a href="/hotspots" class="text-primary-600 font-medium px-3 py-2">热点列表</a>
+                        <a href="/urgent" class="text-gray-600 hover:text-urgent-600 px-3 py-2 flex items-center">
+                            <span class="mr-1">🚨</span> 紧急热点
+                        </a>
+                        <a href="/keywords" class="text-gray-600 hover:text-primary-600 px-3 py-2">监控词管理</a>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <!-- 实时更新控制 -->
+                    <div class="flex items-center space-x-2 mr-4">
+                        <button id="auto-refresh-toggle" onclick="toggleAutoRefresh()" class="flex items-center px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50" title="自动刷新">
+                            <span id="refresh-indicator" class="w-2 h-2 rounded-full bg-gray-300 mr-2"></span>
+                            <span id="refresh-text">自动刷新</span>
+                        </button>
+                        <select id="refresh-interval" onchange="changeRefreshInterval()" class="px-2 py-1.5 text-sm border border-gray-300 rounded-lg">
+                            <option value="30">30秒</option>
+                            <option value="60">1分钟</option>
+                            <option value="300">5分钟</option>
+                        </select>
+                    </div>
+                    <button id="theme-toggle" class="theme-toggle" onclick="toggleTheme()" title="切换主题">
+                        <svg class="theme-icon sun w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                        </svg>
+                        <svg class="theme-icon moon w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                        </svg>
+                    </button>
+                    <button onclick="openCrawlerModal()" class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 text-sm">
+                        手动抓取
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100">
+            <div class="p-6 border-b border-gray-100">
+                <div class="flex flex-wrap gap-4 items-center justify-between">
+                    <div class="flex flex-wrap gap-4 items-center">
+                        <select id="filter-source" onchange="applyFilters()" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                            <option value="">全部来源</option>
+                        </select>
+                        <select id="filter-category" onchange="applyFilters()" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                            <option value="">全部分类</option>
+                        </select>
+                        <select id="filter-sentiment" onchange="applyFilters()" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                            <option value="">全部情感</option>
+                            <option value="positive">正面</option>
+                            <option value="negative">负面</option>
+                            <option value="neutral">中性</option>
+                        </select>
+                    </div>
+                    <div class="flex gap-2">
+                        <input type="text" id="filter-keyword" placeholder="搜索关键词..." onkeyup="if(event.key==='Enter')applyFilters()"
+                            class="px-3 py-2 border border-gray-300 rounded-lg text-sm w-48">
+                        <button onclick="applyFilters()" class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 text-sm">
+                            搜索
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="loading" class="text-center py-20">
+                <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent"></div>
+            </div>
+
+            <div id="content" class="hidden">
+                <div id="list-container" class="divide-y divide-gray-100"></div>
+
+                <div id="pagination" class="p-4 border-t border-gray-100 flex justify-center items-center space-x-2"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 手动抓取模态框 -->
+    <div id="crawler-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+        <div class="bg-white rounded-xl p-6 w-full max-w-md mx-4">
+            <h3 class="text-lg font-semibold mb-4">手动抓取</h3>
+            <p class="text-gray-600 mb-4">确定要立即执行抓取任务吗？</p>
+            <div class="flex justify-end gap-3">
+                <button onclick="closeCrawlerModal()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">取消</button>
+                <button onclick="triggerCrawl()" class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700">确认</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 抓取进度模态框 -->
+    <div id="progress-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+        <div class="bg-white rounded-xl p-6 w-full max-w-lg mx-4">
+            <h3 class="text-lg font-semibold mb-4 flex items-center">
+                <span id="progress-status-icon" class="mr-2">🔄</span>
+                <span id="progress-title">抓取中...</span>
+            </h3>
+            
+            <!-- 进度条 -->
+            <div class="mb-4">
+                <div class="flex justify-between text-sm text-gray-600 mb-1">
+                    <span id="progress-text">准备中...</span>
+                    <span id="progress-percent">0%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div id="progress-bar" class="bg-primary-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+            </div>
+            
+            <!-- 详细统计 -->
+            <div id="progress-stats" class="grid grid-cols-3 gap-4 mb-4 text-center hidden">
+                <div class="bg-gray-50 p-3 rounded-lg">
+                    <div id="stat-crawled" class="text-2xl font-bold text-blue-600">0</div>
+                    <div class="text-xs text-gray-500">已抓取</div>
+                </div>
+                <div class="bg-gray-50 p-3 rounded-lg">
+                    <div id="stat-filtered" class="text-2xl font-bold text-green-600">0</div>
+                    <div class="text-xs text-gray-500">已筛选</div>
+                </div>
+                <div class="bg-gray-50 p-3 rounded-lg">
+                    <div id="stat-saved" class="text-2xl font-bold text-orange-600">0</div>
+                    <div class="text-xs text-gray-500">已保存</div>
+                </div>
+            </div>
+            
+            <!-- 当前数据源 -->
+            <div id="current-source" class="text-sm text-gray-500 mb-4 hidden">
+                正在抓取: <span class="font-medium text-gray-700">-</span>
+            </div>
+            
+            <!-- 结果信息 -->
+            <div id="progress-result" class="hidden">
+                <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                    <p id="result-message" class="text-green-700"></p>
+                </div>
+            </div>
+            
+            <div class="flex justify-end gap-3">
+                <button id="progress-close-btn" onclick="closeProgressModal()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg hidden">关闭</button>
+                <button id="progress-cancel-btn" onclick="cancelCrawl()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-white border-t border-gray-200 mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <p class="text-center text-sm text-gray-500">AI热点监控工具 v2.3.0</p>
+        </div>
+    </footer>
+
+    <script>
+        let currentPage = 1;
+        let totalPages = 1;
+        let filters = { source: '', category: '', sentiment: '', keyword: '' };
+        let autoRefreshEnabled = false;
+        let refreshInterval = 30;
+        let refreshTimer = null;
+
+        // 主题管理
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            }
+        }
+
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        }
+
+        async function loadHotspots() {
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('content').classList.add('hidden');
+
+            try {
+                const params = new URLSearchParams({
+                    page: currentPage,
+                    page_size: 20,
+                    ...filters
+                });
+                Object.keys(params).forEach(key => {
+                    if (!filters[key] && params[key]) {
+                    }
+                });
+
+                const url = `/api/v1/hot/list?page=${currentPage}&page_size=20` +
+                    (filters.source ? `&source=${filters.source}` : '') +
+                    (filters.category ? `&category=${filters.category}` : '') +
+                    (filters.sentiment ? `&sentiment=${filters.sentiment}` : '') +
+                    (filters.keyword ? `&keyword=${filters.keyword}` : '');
+
+                const response = await fetch(url);
+                const result = await response.json();
+
+                if (result.code === 200) {
+                    renderList(result.data.items);
+                    renderPagination(result.data.pagination);
+                    initFilters();
+                }
+            } catch (error) {
+                console.error('Failed to load:', error);
+            }
+
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('content').classList.remove('hidden');
+        }
+
+        function renderList(items) {
+            const container = document.getElementById('list-container');
+
+            if (!items || items.length === 0) {
+                container.innerHTML = '<div class="text-center py-12 text-gray-500">暂无数据</div>';
+                return;
+            }
+
+            container.innerHTML = items.map(item => `
+                <div class="p-4 hover:bg-gray-50 cursor-pointer" onclick="window.location.href='/detail?id=${item.id}'">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <a href="/detail?id=${item.id}" class="text-lg font-medium text-gray-800 hover:text-primary-600" onclick="event.stopPropagation()">
+                                ${item.title}
+                            </a>
+                            <p class="text-sm text-gray-500 mt-1 line-clamp-2">${item.summary || '暂无摘要'}</p>
+                            <div class="flex items-center gap-4 mt-2 text-sm text-gray-500">
+                                <span>📰 ${item.source}</span>
+                                <span>📂 ${item.category}</span>
+                                <span>${item.publish_time ? new Date(item.publish_time).toLocaleDateString('zh-CN') : '未知时间'}</span>
+                            </div>
+                        </div>
+                        <div class="ml-4 flex flex-col items-end">
+                            <span class="px-3 py-1 rounded-full text-lg font-bold ${
+                                item.sentiment === 'positive' ? 'bg-green-100 text-green-700' :
+                                item.sentiment === 'negative' ? 'bg-red-100 text-red-700' :
+                                'bg-gray-100 text-gray-700'
+                            }">${item.hot_score.toFixed(0)}</span>
+                            <span class="text-xs text-gray-400 mt-1">热度</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderPagination(pagination) {
+            const container = document.getElementById('pagination');
+            totalPages = pagination.pages;
+
+            let html = '';
+            if (pagination.page > 1) {
+                html += `<button onclick="goPage(${pagination.page - 1})" class="px-3 py-1 border rounded hover:bg-gray-100">上一页</button>`;
+            }
+
+            for (let i = 1; i <= pagination.pages; i++) {
+                if (i === 1 || i === pagination.pages || (i >= pagination.page - 2 && i <= pagination.page + 2)) {
+                    html += `<button onclick="goPage(${i})" class="px-3 py-1 border rounded ${i === pagination.page ? 'bg-primary-600 text-white' : 'hover:bg-gray-100'}">${i}</button>`;
+                } else if (i === pagination.page - 3 || i === pagination.page + 3) {
+                    html += '<span class="px-2">...</span>';
+                }
+            }
+
+            if (pagination.page < pagination.pages) {
+                html += `<button onclick="goPage(${pagination.page + 1})" class="px-3 py-1 border rounded hover:bg-gray-100">下一页</button>`;
+            }
+
+            html += `<span class="ml-4 text-sm text-gray-500">共 ${pagination.total} 条</span>`;
+            container.innerHTML = html;
+        }
+
+        function goPage(page) {
+            currentPage = page;
+            loadHotspots();
+        }
+
+        function applyFilters() {
+            filters.source = document.getElementById('filter-source').value;
+            filters.category = document.getElementById('filter-category').value;
+            filters.sentiment = document.getElementById('filter-sentiment').value;
+            filters.keyword = document.getElementById('filter-keyword').value;
+            currentPage = 1;
+            loadHotspots();
+        }
+
+        async function initFilters() {
+            try {
+                const response = await fetch('/api/v1/hot/stats');
+                const result = await response.json();
+
+                if (result.code === 200) {
+                    const sources = [...new Set((result.data.hot_sources || []).map(s => s.source))];
+                    const categories = [...new Set((result.data.top_categories || []).map(c => c.category))];
+
+                    document.getElementById('filter-source').innerHTML =
+                        '<option value="">全部来源</option>' +
+                        sources.map(s => `<option value="${s}">${s}</option>`).join('');
+
+                    document.getElementById('filter-category').innerHTML =
+                        '<option value="">全部分类</option>' +
+                        categories.map(c => `<option value="${c}">${c}</option>`).join('');
+                }
+            } catch (error) {
+                console.error('Failed to init filters:', error);
+            }
+        }
+
+        let currentTaskId = null;
+        let progressInterval = null;
+
+        function openCrawlerModal() {
+            document.getElementById('crawler-modal').classList.remove('hidden');
+        }
+
+        function closeCrawlerModal() {
+            document.getElementById('crawler-modal').classList.add('hidden');
+        }
+
+        function openProgressModal() {
+            document.getElementById('progress-modal').classList.remove('hidden');
+            document.getElementById('progress-stats').classList.remove('hidden');
+            document.getElementById('current-source').classList.remove('hidden');
+            document.getElementById('progress-cancel-btn').classList.remove('hidden');
+            document.getElementById('progress-close-btn').classList.add('hidden');
+            document.getElementById('progress-result').classList.add('hidden');
+        }
+
+        function closeProgressModal() {
+            document.getElementById('progress-modal').classList.add('hidden');
+            if (progressInterval) {
+                clearInterval(progressInterval);
+                progressInterval = null;
+            }
+            currentTaskId = null;
+        }
+
+        function updateProgressUI(task) {
+            const progress = task.progress || {};
+            const total = progress.total_sources || 1;
+            const completed = progress.completed_sources || 0;
+            const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+            
+            // 更新进度条
+            document.getElementById('progress-bar').style.width = percent + '%';
+            document.getElementById('progress-percent').textContent = percent + '%';
+            
+            // 更新统计
+            document.getElementById('stat-crawled').textContent = progress.total_crawled || 0;
+            document.getElementById('stat-filtered').textContent = progress.total_filtered || 0;
+            document.getElementById('stat-saved').textContent = progress.total_saved || 0;
+            
+            // 更新当前数据源
+            const currentSource = progress.current_source || '-';
+            document.getElementById('current-source').querySelector('span').textContent = currentSource;
+            
+            // 更新状态文本
+            const statusText = {
+                'pending': '准备中...',
+                'running': `正在抓取 (${completed}/${total})...`,
+                'completed': '抓取完成！',
+                'failed': '抓取失败'
+            };
+            document.getElementById('progress-text').textContent = statusText[task.status] || '未知状态';
+        }
+
+        function showProgressResult(task) {
+            document.getElementById('progress-stats').classList.add('hidden');
+            document.getElementById('current-source').classList.add('hidden');
+            document.getElementById('progress-cancel-btn').classList.add('hidden');
+            document.getElementById('progress-close-btn').classList.remove('hidden');
+            document.getElementById('progress-result').classList.remove('hidden');
+            
+            if (task.status === 'completed') {
+                document.getElementById('progress-status-icon').textContent = '✅';
+                document.getElementById('progress-title').textContent = '抓取完成';
+                const result = task.result || {};
+                const msg = `成功抓取 ${result.total_crawled || 0} 条，筛选后保存 ${result.total_saved || 0} 条`;
+                document.getElementById('result-message').textContent = msg;
+                
+                // 刷新列表
+                loadHotspots();
+            } else if (task.status === 'failed') {
+                document.getElementById('progress-status-icon').textContent = '❌';
+                document.getElementById('progress-title').textContent = '抓取失败';
+                document.getElementById('result-message').textContent = task.error_message || '未知错误';
+                document.getElementById('result-message').parentElement.classList.remove('bg-green-50', 'border-green-200');
+                document.getElementById('result-message').parentElement.classList.add('bg-red-50', 'border-red-200');
+                document.getElementById('result-message').classList.remove('text-green-700');
+                document.getElementById('result-message').classList.add('text-red-700');
+            }
+        }
+
+        async function pollTaskProgress() {
+            if (!currentTaskId) return;
+            
+            try {
+                const response = await fetch(`/api/v1/crawler/task/${currentTaskId}`);
+                const result = await response.json();
+                
+                if (result.code === 200 && result.data.task) {
+                    const task = result.data.task;
+                    updateProgressUI(task);
+                    
+                    if (task.status === 'completed' || task.status === 'failed') {
+                        clearInterval(progressInterval);
+                        progressInterval = null;
+                        showProgressResult(task);
+                    }
+                }
+            } catch (error) {
+                console.error('获取进度失败:', error);
+            }
+        }
+
+        async function triggerCrawl() {
+            closeCrawlerModal();
+            openProgressModal();
+            
+            try {
+                const response = await fetch('/api/v1/crawler/run', { method: 'POST' });
+                const result = await response.json();
+                
+                if (result.code === 200 && result.data.task_id) {
+                    currentTaskId = result.data.task_id;
+                    // 开始轮询进度
+                    progressInterval = setInterval(pollTaskProgress, 1000);
+                    pollTaskProgress(); // 立即获取一次
+                } else {
+                    throw new Error(result.message || '启动失败');
+                }
+            } catch (error) {
+                document.getElementById('progress-text').textContent = '启动失败: ' + error.message;
+                document.getElementById('progress-bar').classList.remove('bg-primary-600');
+                document.getElementById('progress-bar').classList.add('bg-red-600');
+                document.getElementById('progress-cancel-btn').classList.add('hidden');
+                document.getElementById('progress-close-btn').classList.remove('hidden');
+            }
+        }
+
+        function cancelCrawl() {
+            if (progressInterval) {
+                clearInterval(progressInterval);
+                progressInterval = null;
+            }
+            closeProgressModal();
+        }
+
+        // 自动刷新控制
+        function toggleAutoRefresh() {
+            autoRefreshEnabled = !autoRefreshEnabled;
+            const indicator = document.getElementById('refresh-indicator');
+            const text = document.getElementById('refresh-text');
+            
+            if (autoRefreshEnabled) {
+                indicator.classList.remove('bg-gray-300');
+                indicator.classList.add('bg-green-500', 'animate-pulse');
+                text.textContent = '自动刷新中';
+                startAutoRefresh();
+            } else {
+                indicator.classList.remove('bg-green-500', 'animate-pulse');
+                indicator.classList.add('bg-gray-300');
+                text.textContent = '自动刷新';
+                stopAutoRefresh();
+            }
+        }
+
+        function startAutoRefresh() {
+            stopAutoRefresh();
+            refreshTimer = setInterval(() => {
+                if (autoRefreshEnabled && currentPage === 1 && !filters.keyword) {
+                    loadHotspots();
+                }
+            }, refreshInterval * 1000);
+        }
+
+        function stopAutoRefresh() {
+            if (refreshTimer) {
+                clearInterval(refreshTimer);
+                refreshTimer = null;
+            }
+        }
+
+        function changeRefreshInterval() {
+            const select = document.getElementById('refresh-interval');
+            refreshInterval = parseInt(select.value);
+            if (autoRefreshEnabled) {
+                startAutoRefresh();
+            }
+        }
+
+        // 将函数绑定到window对象
+        window.toggleTheme = toggleTheme;
+        window.goPage = goPage;
+        window.applyFilters = applyFilters;
+        window.openCrawlerModal = openCrawlerModal;
+        window.closeCrawlerModal = closeCrawlerModal;
+        window.closeProgressModal = closeProgressModal;
+        window.triggerCrawl = triggerCrawl;
+        window.cancelCrawl = cancelCrawl;
+        window.toggleAutoRefresh = toggleAutoRefresh;
+        window.changeRefreshInterval = changeRefreshInterval;
+
+        // 初始化
+        initTheme();
+        loadHotspots();
+    </script>
+</body>
+</html>

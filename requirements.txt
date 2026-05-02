@@ -1,0 +1,63 @@
+# Web框架
+fastapi>=0.105.0
+uvicorn[standard]>=0.24.0
+
+# WebSocket
+python-socketio>=5.9.0
+websocket-client>=1.6.0
+
+# 数据抓取
+requests>=2.31.0
+beautifulsoup4>=4.12.3
+aiohttp>=3.9.0
+fake-useragent>=1.4.0
+playwright>=1.40.0  # 支持JS渲染的数据源抓取
+
+# 定时任务
+apscheduler>=3.10.4
+
+# 数据处理
+pandas>=2.1.4
+numpy>=1.24.0
+pytz>=2023.3
+
+# 缓存与数据库
+redis>=5.0.1
+sqlalchemy>=2.0.23
+alembic>=1.12.0
+aiosqlite>=0.19.0
+
+# AI/ML
+nltk>=3.8.1
+transformers>=4.30.0
+torch>=2.0.0
+jieba>=0.42.1
+
+# MCP协议（需要Python >= 3.10）
+mcp>=1.0.0
+
+# 日志
+loguru>=0.7.2
+
+# 配置与工具
+pyyaml>=6.0.1
+watchdog>=3.0.0
+python-dotenv>=1.0.0
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+python-multipart>=0.0.6
+
+# 用户认证 (P3)
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+bcrypt>=4.1.0
+
+# 测试
+pytest>=7.4.3
+pytest-asyncio>=0.21.0
+pytest-html>=4.1.0
+httpx>=0.25.0
+
+# 工具
+jinja2>=3.1.2
+openpyxl>=3.1.2  # Excel导出支持

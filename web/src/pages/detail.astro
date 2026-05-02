@@ -1,0 +1,571 @@
+---
+---
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>热点详情 - AI热点监控</title>
+    <style>
+        *, *::before, *::after {
+            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+        }
+
+        .dark body {
+            background-color: #0f172a;
+            color: #e2e8f0;
+        }
+
+        .dark .bg-gray-50 {
+            background-color: #0f172a;
+        }
+
+        .dark .bg-white {
+            background-color: #1e293b;
+        }
+
+        .dark .text-gray-800 {
+            color: #f1f5f9;
+        }
+
+        .dark .text-gray-700 {
+            color: #e2e8f0;
+        }
+
+        .dark .text-gray-600 {
+            color: #cbd5e1;
+        }
+
+        .dark .text-gray-500 {
+            color: #94a3b8;
+        }
+
+        .dark .border-gray-200 {
+            border-color: #334155;
+        }
+
+        .dark .border-gray-100 {
+            border-color: #334155;
+        }
+
+        .dark .border-gray-300 {
+            border-color: #475569;
+        }
+
+        .dark .bg-gray-100 {
+            background-color: #334155;
+        }
+
+        .dark .bg-gray-50 {
+            background-color: #1e293b;
+        }
+
+        .dark .hover\:bg-gray-100:hover {
+            background-color: #334155;
+        }
+
+        .dark .hover\:bg-gray-50:hover {
+            background-color: #1e293b;
+        }
+
+        /* 主题切换按钮 */
+        .theme-toggle {
+            position: relative;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        .dark .theme-toggle:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .theme-icon {
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            position: absolute;
+        }
+
+        .theme-icon.sun {
+            opacity: 1;
+            transform: rotate(0deg) scale(1);
+        }
+
+        .theme-icon.moon {
+            opacity: 0;
+            transform: rotate(90deg) scale(0.5);
+        }
+
+        .dark .theme-icon.sun {
+            opacity: 0;
+            transform: rotate(-90deg) scale(0.5);
+        }
+
+        .dark .theme-icon.moon {
+            opacity: 1;
+            transform: rotate(0deg) scale(1);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <nav class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center space-x-8">
+                    <a href="/" class="text-xl font-bold text-primary-600">🤖 AI热点监控</a>
+                    <div class="flex space-x-4">
+                        <a href="/" class="text-gray-600 hover:text-primary-600 px-3 py-2">仪表盘</a>
+                        <a href="/hotspots" class="text-gray-600 hover:text-primary-600 px-3 py-2">热点列表</a>
+                        <a href="/urgent" class="text-gray-600 hover:text-urgent-600 px-3 py-2 flex items-center">
+                            <span class="mr-1">🚨</span> 紧急热点
+                        </a>
+                        <a href="/keywords" class="text-gray-600 hover:text-primary-600 px-3 py-2">监控词管理</a>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button id="theme-toggle" class="theme-toggle" onclick="toggleTheme()" title="切换主题">
+                        <svg class="theme-icon sun w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                        </svg>
+                        <svg class="theme-icon moon w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                        </svg>
+                    </button>
+                    <button onclick="window.location.href='/hotspots'" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg text-sm">
+                        ← 返回列表
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div id="loading" class="text-center py-20">
+            <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent"></div>
+        </div>
+
+        <div id="content" class="hidden">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <!-- 标题区域 -->
+                <div class="p-6 border-b border-gray-100">
+                    <div class="flex items-start justify-between gap-4">
+                        <div class="flex-1">
+                            <h1 id="hotspot-title" class="text-2xl font-bold text-gray-800 mb-4"></h1>
+                            <div class="flex flex-wrap gap-2 items-center text-sm text-gray-500">
+                                <span id="hotspot-source" class="bg-gray-100 px-3 py-1 rounded-full"></span>
+                                <span id="hotspot-category" class="bg-primary-100 text-primary-700 px-3 py-1 rounded-full"></span>
+                                <span id="hotspot-sentiment" class="px-3 py-1 rounded-full"></span>
+                                <span id="hotspot-time" class="text-gray-400"></span>
+                            </div>
+                        </div>
+                        <div class="text-center">
+                            <div id="hotspot-score" class="text-3xl font-bold text-primary-600"></div>
+                            <div class="text-xs text-gray-400 mt-1">热度分</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 内容区域 -->
+                <div class="p-6 space-y-6">
+                    <!-- 完整内容 -->
+                    <div class="prose max-w-none">
+                        <h3 class="text-lg font-semibold text-gray-700 mb-3 flex items-center">
+                            📄 内容
+                            <span id="content-status-badge" class="ml-2 text-xs px-2 py-1 rounded-full hidden"></span>
+                        </h3>
+                        <div id="hotspot-content" class="text-gray-700 leading-relaxed whitespace-pre-wrap"></div>
+                        
+                        <!-- 内容抓取提示 -->
+                        <div id="content-notice" class="hidden mt-4 p-4 rounded-lg">
+                            <p id="content-notice-text" class="text-sm"></p>
+                            <button id="fetch-content-btn" onclick="fetchFullContent()" class="mt-2 px-4 py-2 bg-primary-600 text-white text-sm rounded-lg hover:bg-primary-700 hidden">
+                                抓取完整内容
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- AI分析理由 -->
+                    <div id="ai-analysis-section" class="hidden">
+                        <div class="bg-gradient-to-r from-primary-50 to-blue-50 p-6 rounded-xl border border-primary-100">
+                            <h3 class="text-lg font-semibold text-primary-700 mb-4 flex items-center">
+                                <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                                </svg>
+                                🤖 AI分析理由
+                            </h3>
+
+                            <div id="ai-analysis-content" class="space-y-4">
+                                <!-- 动态填充 -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 统计信息 -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="text-sm font-semibold text-gray-600 mb-3">📊 统计数据</h4>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">热度分数</span>
+                                    <span id="stat-score" class="font-medium text-gray-700"></span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">浏览量</span>
+                                    <span id="stat-views" class="font-medium text-gray-700"></span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">互动量</span>
+                                    <span id="stat-interactions" class="font-medium text-gray-700"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="text-sm font-semibold text-gray-600 mb-3">📅 时间信息</h4>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">发布时间</span>
+                                    <span id="stat-publish-time" class="font-medium text-gray-700"></span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">抓取时间</span>
+                                    <span id="stat-crawl-time" class="font-medium text-gray-700"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 关键词 -->
+                    <div id="keywords-section" class="hidden">
+                        <h4 class="text-sm font-semibold text-gray-600 mb-3">🏷️ 关键词</h4>
+                        <div id="keywords-list" class="flex flex-wrap gap-2">
+                            <!-- 动态填充 -->
+                        </div>
+                    </div>
+
+                    <!-- 操作按钮 -->
+                    <div class="flex flex-wrap gap-3 pt-4 border-t border-gray-100">
+                        <a id="original-link" href="#" target="_blank" class="inline-flex items-center px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                            </svg>
+                            查看原文
+                        </a>
+                        <button onclick="shareHotspot()" class="inline-flex items-center px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>
+                            </svg>
+                            分享
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 错误提示 -->
+        <div id="error-message" class="hidden text-center py-20">
+            <div class="text-6xl mb-4">😕</div>
+            <h3 class="text-xl font-semibold text-gray-700 mb-2">热点不存在或已删除</h3>
+            <p class="text-gray-500 mb-6">无法找到该热点的详细信息</p>
+            <a href="/hotspots" class="inline-flex items-center px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700">
+                返回热点列表
+            </a>
+        </div>
+    </main>
+
+    <footer class="bg-white border-t border-gray-200 mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <p class="text-center text-sm text-gray-500">AI热点监控工具 v3.0.0</p>
+        </div>
+    </footer>
+
+    <script>
+        // 从URL参数获取热点ID
+        const urlParams = new URLSearchParams(window.location.search);
+        const hotspotId = urlParams.get('id');
+
+        // 主题管理
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            }
+        }
+
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        }
+
+        function getSentimentColor(sentiment) {
+            switch(sentiment) {
+                case 'positive':
+                    return 'bg-green-100 text-green-700';
+                case 'negative':
+                    return 'bg-red-100 text-red-700';
+                default:
+                    return 'bg-gray-100 text-gray-700';
+            }
+        }
+
+        function getSentimentLabel(sentiment) {
+            switch(sentiment) {
+                case 'positive':
+                    return '😊 正面';
+                case 'negative':
+                    return '😔 负面';
+                default:
+                    return '😐 中性';
+            }
+        }
+
+        async function loadHotspotDetail() {
+            if (!hotspotId) {
+                showError();
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/v1/hot/detail/${hotspotId}?include_analysis=true`);
+                const result = await response.json();
+
+                if (result.code === 200 && result.data.hotspot) {
+                    renderHotspot(result.data.hotspot);
+                } else {
+                    showError();
+                }
+            } catch (error) {
+                console.error('Failed to load hotspot detail:', error);
+                showError();
+            }
+        }
+
+        function renderHotspot(hotspot) {
+            // 填充基本信息
+            document.getElementById('hotspot-title').textContent = hotspot.title;
+            document.getElementById('hotspot-source').textContent = `📰 ${hotspot.source}`;
+            document.getElementById('hotspot-category').textContent = `📂 ${hotspot.category}`;
+
+            const sentimentEl = document.getElementById('hotspot-sentiment');
+            sentimentEl.textContent = getSentimentLabel(hotspot.sentiment);
+            sentimentEl.className = `px-3 py-1 rounded-full text-sm ${getSentimentColor(hotspot.sentiment)}`;
+
+            document.getElementById('hotspot-time').textContent = hotspot.publish_time
+                ? new Date(hotspot.publish_time).toLocaleString('zh-CN')
+                : '未知时间';
+            document.getElementById('hotspot-score').textContent = hotspot.hot_score.toFixed(0);
+
+            // 显示完整内容，如果没有则显示摘要
+            const contentEl = document.getElementById('hotspot-content');
+            const displayContent = hotspot.content || hotspot.summary || '暂无内容';
+            contentEl.textContent = displayContent;
+            
+            // 处理内容状态显示
+            const statusBadge = document.getElementById('content-status-badge');
+            const contentNotice = document.getElementById('content-notice');
+            const contentNoticeText = document.getElementById('content-notice-text');
+            const fetchContentBtn = document.getElementById('fetch-content-btn');
+            
+            if (hotspot.content && hotspot.content.length > 200) {
+                // 有完整内容
+                statusBadge.classList.remove('hidden');
+                statusBadge.classList.add('bg-green-100', 'text-green-700');
+                statusBadge.textContent = '完整内容';
+            } else if (hotspot.url && !hotspot.url.includes('example.com')) {
+                // 有真实URL但没有完整内容
+                statusBadge.classList.remove('hidden');
+                statusBadge.classList.add('bg-yellow-100', 'text-yellow-700');
+                statusBadge.textContent = '摘要';
+                
+                contentNotice.classList.remove('hidden');
+                contentNotice.classList.add('bg-yellow-50', 'border', 'border-yellow-200');
+                contentNoticeText.textContent = '当前显示的是摘要内容。点击按钮抓取完整文章内容。';
+                contentNoticeText.classList.add('text-yellow-700');
+                fetchContentBtn.classList.remove('hidden');
+            } else {
+                // 示例数据，没有真实URL
+                statusBadge.classList.remove('hidden');
+                statusBadge.classList.add('bg-gray-100', 'text-gray-600');
+                statusBadge.textContent = '示例数据';
+                
+                contentNotice.classList.remove('hidden');
+                contentNotice.classList.add('bg-gray-50', 'border', 'border-gray-200');
+                contentNoticeText.textContent = '这是示例数据，无法获取完整内容。真实抓取的热点将显示完整内容。';
+                contentNoticeText.classList.add('text-gray-600');
+            }
+
+            // 统计信息
+            document.getElementById('stat-score').textContent = hotspot.hot_score.toFixed(2);
+            document.getElementById('stat-views').textContent = hotspot.views || 0;
+            document.getElementById('stat-interactions').textContent = hotspot.interactions || 0;
+            document.getElementById('stat-publish-time').textContent = hotspot.publish_time 
+                ? new Date(hotspot.publish_time).toLocaleString('zh-CN')
+                : '未知';
+            document.getElementById('stat-crawl-time').textContent = hotspot.crawl_time 
+                ? new Date(hotspot.crawl_time).toLocaleString('zh-CN')
+                : '未知';
+
+            // 原文链接
+            const originalLink = document.getElementById('original-link');
+            if (hotspot.url && !hotspot.url.includes('example.com')) {
+                originalLink.href = hotspot.url;
+            } else {
+                originalLink.classList.add('hidden');
+            }
+
+            // AI分析理由
+            if (hotspot.ai_analysis) {
+                const aiSection = document.getElementById('ai-analysis-section');
+                const aiContent = document.getElementById('ai-analysis-content');
+                const analysis = hotspot.ai_analysis;
+
+                let analysisHtml = '';
+
+                if (analysis.keyword_match_reason) {
+                    analysisHtml += `
+                        <div class="bg-white/60 p-4 rounded-lg">
+                            <p class="text-sm font-semibold text-primary-600 mb-2">🔑 关键词匹配</p>
+                            <p class="text-sm text-gray-700">${analysis.keyword_match_reason}</p>
+                            ${analysis.matched_keywords && analysis.matched_keywords.length > 0 ? `
+                                <div class="flex flex-wrap gap-2 mt-2">
+                                    ${analysis.matched_keywords.map(k => `<span class="bg-primary-100 text-primary-700 px-2 py-1 rounded text-xs">${k}</span>`).join('')}
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }
+
+                if (analysis.hot_score_reason) {
+                    analysisHtml += `
+                        <div class="bg-white/60 p-4 rounded-lg">
+                            <p class="text-sm font-semibold text-orange-600 mb-2">📊 热度评分</p>
+                            <p class="text-sm text-gray-700 mb-3">${analysis.hot_score_reason}</p>
+                            <div class="grid grid-cols-2 gap-3 text-xs bg-white/40 p-3 rounded">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">浏览量得分</span>
+                                    <span class="font-medium">${analysis.views_score?.toFixed(1) || 0}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">互动量得分</span>
+                                    <span class="font-medium">${analysis.interaction_score?.toFixed(1) || 0}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">时间衰减因子</span>
+                                    <span class="font-medium">${analysis.time_decay_factor?.toFixed(2) || 1.0}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">关键词加分</span>
+                                    <span class="font-medium">${analysis.keyword_bonus?.toFixed(1) || 0}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                if (analysis.sentiment_reason) {
+                    analysisHtml += `
+                        <div class="bg-white/60 p-4 rounded-lg">
+                            <p class="text-sm font-semibold text-green-600 mb-2">😊 情感分析</p>
+                            <p class="text-sm text-gray-700">${analysis.sentiment_reason}</p>
+                        </div>
+                    `;
+                }
+
+                if (analysis.category_reason) {
+                    analysisHtml += `
+                        <div class="bg-white/60 p-4 rounded-lg">
+                            <p class="text-sm font-semibold text-purple-600 mb-2">📂 自动分类</p>
+                            <p class="text-sm text-gray-700">${analysis.category_reason}</p>
+                        </div>
+                    `;
+                }
+
+                aiContent.innerHTML = analysisHtml;
+                aiSection.classList.remove('hidden');
+            }
+
+            // 关键词
+            if (hotspot.keywords) {
+                const keywordsSection = document.getElementById('keywords-section');
+                const keywordsList = document.getElementById('keywords-list');
+                const keywords = hotspot.keywords.split(',').filter(k => k.trim());
+                
+                if (keywords.length > 0) {
+                    keywordsList.innerHTML = keywords.map(k => `
+                        <span class="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm">${k.trim()}</span>
+                    `).join('');
+                    keywordsSection.classList.remove('hidden');
+                }
+            }
+
+            // 显示内容
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('content').classList.remove('hidden');
+            
+            // 更新页面标题
+            document.title = `${hotspot.title} - AI热点监控`;
+        }
+
+        function showError() {
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('error-message').classList.remove('hidden');
+        }
+
+        function shareHotspot() {
+            if (navigator.share) {
+                navigator.share({
+                    title: document.getElementById('hotspot-title').textContent,
+                    url: window.location.href
+                }).catch(console.error);
+            } else {
+                // 复制链接到剪贴板
+                navigator.clipboard.writeText(window.location.href).then(() => {
+                    alert('链接已复制到剪贴板');
+                }).catch(() => {
+                    alert('分享链接: ' + window.location.href);
+                });
+            }
+        }
+
+        async function fetchFullContent() {
+            const btn = document.getElementById('fetch-content-btn');
+            const originalText = btn.textContent;
+            btn.textContent = '抓取中...';
+            btn.disabled = true;
+            
+            try {
+                const response = await fetch(`/api/v1/hot/detail/${hotspotId}/fetch`, { method: 'POST' });
+                const result = await response.json();
+                
+                if (result.code === 200) {
+                    alert(result.data.message || '内容抓取已启动，请稍后刷新页面查看');
+                    btn.textContent = '已启动，请刷新';
+                } else {
+                    throw new Error(result.message || '抓取失败');
+                }
+            } catch (error) {
+                alert('抓取失败: ' + error.message);
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        // 将函数绑定到window对象
+        window.toggleTheme = toggleTheme;
+        window.shareHotspot = shareHotspot;
+        window.fetchFullContent = fetchFullContent;
+
+        // 初始化
+        initTheme();
+        loadHotspotDetail();
+    </script>
+</body>
+</html>

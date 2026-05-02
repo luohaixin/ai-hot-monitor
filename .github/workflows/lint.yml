@@ -1,0 +1,63 @@
+name: Lint
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint-python:
+    name: Lint Python
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install flake8 black isort mypy
+
+      - name: Run isort
+        run: |
+          isort --check-only --diff .
+
+      - name: Run black
+        run: |
+          black --check --diff .
+
+      - name: Run flake8
+        run: |
+          flake8 . --max-line-length=120 --ignore=E501,W503
+
+  lint-frontend:
+    name: Lint Frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./web
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: |
+          npm ci
+
+      - name: ESLint
+        run: |
+          npx eslint src --ext .js,.astro
+
+      - name: Check prettier
+        run: |
+          npx prettier --check src

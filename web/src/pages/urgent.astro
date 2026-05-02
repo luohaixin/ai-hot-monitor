@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>紧急热点 - AI热点监控</title>
+    <style>
+        *, *::before, *::after {
+            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+        }
+
+        .dark body {
+            background-color: #0f172a;
+            color: #e2e8f0;
+        }
+
+        .dark .bg-gray-50 { background-color: #0f172a; }
+        .dark .bg-white { background-color: #1e293b; }
+        .dark .text-gray-800 { color: #f1f5f9; }
+        .dark .text-gray-700 { color: #e2e8f0; }
+        .dark .text-gray-600 { color: #cbd5e1; }
+        .dark .text-gray-500 { color: #94a3b8; }
+        .dark .border-gray-200 { border-color: #334155; }
+        .dark .border-gray-100 { border-color: #334155; }
+        .dark .bg-gray-100 { background-color: #334155; }
+        .dark .hover\:bg-gray-100:hover { background-color: #334155; }
+        .dark .hover\:bg-gray-50:hover { background-color: #1e293b; }
+
+        .urgent-card {
+            animation: pulse-border 2s infinite;
+        }
+
+        @keyframes pulse-border {
+            0%, 100% { border-color: #f87171; box-shadow: 0 0 0 0 rgba(248, 113, 113, 0.4); }
+            50% { border-color: #ef4444; box-shadow: 0 0 0 4px rgba(248, 113, 113, 0.1); }
+        }
+
+        .theme-toggle {
+            position: relative;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle:hover { background-color: rgba(0, 0, 0, 0.05); }
+        .dark .theme-toggle:hover { background-color: rgba(255, 255, 255, 0.1); }
+
+        .theme-icon {
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            position: absolute;
+        }
+
+        .theme-icon.sun { opacity: 1; transform: rotate(0deg) scale(1); }
+        .theme-icon.moon { opacity: 0; transform: rotate(90deg) scale(0.5); }
+
+        .dark .theme-icon.sun { opacity: 0; transform: rotate(-90deg) scale(0.5); }
+        .dark .theme-icon.moon { opacity: 1; transform: rotate(0deg) scale(1); }
+
+        .acknowledged {
+            opacity: 0.6;
+            filter: grayscale(0.5);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <nav class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center space-x-8">
+                    <a href="/" class="text-xl font-bold text-urgent-600">🚨 AI热点监控</a>
+                    <div class="flex space-x-4">
+                        <a href="/" class="text-gray-600 hover:text-urgent-600 px-3 py-2">仪表盘</a>
+                        <a href="/hotspots" class="text-gray-600 hover:text-urgent-600 px-3 py-2">热点列表</a>
+                        <a href="/urgent" class="text-urgent-600 font-medium px-3 py-2">紧急热点</a>
+                        <a href="/keywords" class="text-gray-600 hover:text-urgent-600 px-3 py-2">监控词管理</a>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span id="time" class="text-sm text-gray-500"></span>
+                    <button id="theme-toggle" class="theme-toggle" onclick="toggleTheme()" title="切换主题">
+                        <svg class="theme-icon sun w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                        </svg>
+                        <svg class="theme-icon moon w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- 页面标题 -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900 dark:text-white flex items-center">
+                        <span class="mr-3">🚨</span> 紧急热点监控
+                    </h1>
+                    <p class="mt-2 text-gray-600 dark:text-gray-400">
+                        自动识别高优先级热点，确保重要信息第一时间送达
+                    </p>
+                </div>
+                <div class="flex space-x-3">
+                    <button onclick="scanUrgent()" class="px-4 py-2 bg-urgent-600 text-white rounded-lg hover:bg-urgent-700 flex items-center space-x-2">
+                        <span>🔍</span>
+                        <span>扫描紧急热点</span>
+                    </button>
+                    <button onclick="pushUrgent()" class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 flex items-center space-x-2">
+                        <span>📢</span>
+                        <span>推送未确认</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 统计卡片 -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8" id="stats-container">
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-500 mb-1">总紧急热点</p>
+                        <p id="stat-total" class="text-3xl font-bold text-urgent-600">-</p>
+                    </div>
+                    <div class="w-12 h-12 bg-urgent-100 rounded-full flex items-center justify-center text-2xl">🚨</div>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-500 mb-1">待确认</p>
+                        <p id="stat-unacknowledged" class="text-3xl font-bold text-orange-600">-</p>
+                    </div>
+                    <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center text-2xl">⚠️</div>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-500 mb-1">今日紧急</p>
+                        <p id="stat-today" class="text-3xl font-bold text-yellow-600">-</p>
+                    </div>
+                    <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center text-2xl">📅</div>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-500 mb-1">平均紧急分数</p>
+                        <p id="stat-avg-score" class="text-3xl font-bold text-blue-600">-</p>
+                    </div>
+                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-2xl">📊</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 筛选器 -->
+        <div class="bg-white rounded-xl shadow-sm p-4 border border-gray-100 mb-6">
+            <div class="flex flex-wrap items-center gap-4">
+                <div class="flex items-center space-x-2">
+                    <span class="text-gray-600">显示:</span>
+                    <select id="filter-status" onchange="loadUrgentHotspots()" class="px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-urgent-500">
+                        <option value="unacknowledged">待确认</option>
+                        <option value="all">全部</option>
+                    </select>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="text-gray-600">最低分数:</span>
+                    <select id="filter-min-score" onchange="loadUrgentHotspots()" class="px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-urgent-500">
+                        <option value="">不限</option>
+                        <option value="80">80分以上</option>
+                        <option value="60">60分以上</option>
+                    </select>
+                </div>
+                <div class="flex-1"></div>
+                <button onclick="loadUrgentHotspots()" class="px-4 py-2 text-gray-600 hover:text-urgent-600 flex items-center space-x-1">
+                    <span>🔄</span>
+                    <span>刷新</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 加载状态 -->
+        <div id="loading" class="text-center py-20">
+            <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-urgent-500 border-t-transparent"></div>
+            <p class="mt-4 text-gray-600">加载中...</p>
+        </div>
+
+        <!-- 错误状态 -->
+        <div id="error" class="hidden text-center py-20">
+            <div class="text-6xl mb-4">😵</div>
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">加载失败</h2>
+            <p id="error-message" class="text-gray-600 mb-4"></p>
+            <button onclick="loadUrgentHotspots()" class="px-4 py-2 bg-urgent-600 text-white rounded-lg hover:bg-urgent-700">
+                重试
+            </button>
+        </div>
+
+        <!-- 空状态 -->
+        <div id="empty" class="hidden text-center py-20">
+            <div class="text-6xl mb-4">✅</div>
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">暂无紧急热点</h2>
+            <p class="text-gray-600">当前没有需要立即关注的紧急热点</p>
+        </div>
+
+        <!-- 紧急热点列表 -->
+        <div id="hotspots-list" class="space-y-4"></div>
+
+        <!-- 分页 -->
+        <div id="pagination" class="flex justify-center items-center mt-8 space-x-2">
+            <!-- 分页按钮将由JS动态生成 -->
+        </div>
+    </main>
+
+    <!-- 确认弹窗 -->
+    <div id="ack-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl p-6 max-w-md w-full mx-4">
+            <h3 class="text-lg font-bold text-gray-800 mb-4">确认已读</h3>
+            <p class="text-gray-600 mb-6">确认已将此紧急热点标记为已读？确认后将不再重复推送提醒。</p>
+            <div class="flex justify-end space-x-3">
+                <button onclick="closeAckModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800">取消</button>
+                <button onclick="confirmAcknowledge()" class="px-4 py-2 bg-urgent-600 text-white rounded-lg hover:bg-urgent-700">确认</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 详情弹窗 -->
+    <div id="detail-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+            <div class="p-6" id="detail-content">
+                <!-- 详情内容将由JS动态填充 -->
+            </div>
+            <div class="border-t border-gray-200 p-4 flex justify-end space-x-3">
+                <button onclick="closeDetailModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800">关闭</button>
+                <a id="detail-link" href="#" target="_blank" class="px-4 py-2 bg-urgent-600 text-white rounded-lg hover:bg-urgent-700">查看原文</a>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-white border-t border-gray-200 mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <p class="text-center text-sm text-gray-500">AI热点监控工具 v2.3.0 | <a href="/docs" class="text-urgent-600 hover:text-urgent-700">API文档</a></p>
+        </div>
+    </footer>
+
+    <script>
+        let currentHotspotId = null;
+        let currentPage = 1;
+        const pageSize = 10;
+
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            }
+        }
+
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        }
+
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('time').textContent = now.toLocaleString('zh-CN');
+        }
+
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/v1/urgent/stats');
+                const result = await response.json();
+
+                if (result.code === 200) {
+                    document.getElementById('stat-total').textContent = result.data.total_urgent || 0;
+                    document.getElementById('stat-unacknowledged').textContent = result.data.unacknowledged || 0;
+                    document.getElementById('stat-today').textContent = result.data.today_urgent || 0;
+                    document.getElementById('stat-avg-score').textContent = (result.data.avg_urgent_score || 0).toFixed(1);
+                }
+            } catch (error) {
+                console.error('Failed to load stats:', error);
+            }
+        }
+
+        async function loadUrgentHotspots() {
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('error').classList.add('hidden');
+            document.getElementById('hotspots-list').classList.add('hidden');
+            document.getElementById('empty').classList.add('hidden');
+
+            try {
+                const filterStatus = document.getElementById('filter-status').value;
+                const minScore = document.getElementById('filter-min-score').value;
+
+                let url = `/api/v1/urgent/list?limit=${pageSize}&include_acknowledged=${filterStatus === 'all'}`;
+                if (minScore) url += `&min_score=${minScore}`;
+
+                const response = await fetch(url);
+                const result = await response.json();
+
+                if (result.code === 200) {
+                    renderHotspots(result.data.items);
+                } else {
+                    throw new Error(result.message || '加载失败');
+                }
+            } catch (error) {
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('error').classList.remove('hidden');
+                document.getElementById('error-message').textContent = error.message;
+            }
+        }
+
+        function renderHotspots(hotspots) {
+            document.getElementById('loading').classList.add('hidden');
+
+            if (!hotspots || hotspots.length === 0) {
+                document.getElementById('empty').classList.remove('hidden');
+                return;
+            }
+
+            document.getElementById('hotspots-list').classList.remove('hidden');
+
+            const container = document.getElementById('hotspots-list');
+            container.innerHTML = hotspots.map(h => `
+                <div class="bg-white rounded-xl shadow-sm p-6 border-2 ${h.urgent_acknowledged ? 'border-gray-200 acknowledged' : 'border-urgent-200 urgent-card'}">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center space-x-2 mb-2">
+                                ${!h.urgent_acknowledged ? '<span class="px-2 py-1 text-xs font-bold bg-urgent-500 text-white rounded-full animate-pulse">紧急</span>' : '<span class="px-2 py-1 text-xs font-bold bg-gray-400 text-white rounded-full">已确认</span>'}
+                                <span class="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded-full">${h.category}</span>
+                                <span class="px-2 py-1 text-xs bg-orange-100 text-orange-700 rounded-full">${h.source}</span>
+                            </div>
+                            <h3 class="text-lg font-semibold text-gray-800 mb-2">${h.title}</h3>
+                            <p class="text-gray-600 mb-3 line-clamp-2">${h.summary || '暂无摘要'}</p>
+                            <div class="flex flex-wrap items-center gap-4 text-sm text-gray-500">
+                                <span class="flex items-center space-x-1">
+                                    <span>⚠️</span>
+                                    <span class="font-medium text-urgent-600">紧急分数: ${Math.round(h.urgent_score)}</span>
+                                </span>
+                                <span class="flex items-center space-x-1">
+                                    <span>🔥</span>
+                                    <span>热度: ${Math.round(h.hot_score)}</span>
+                                </span>
+                                <span class="flex items-center space-x-1">
+                                    <span>📝</span>
+                                    <span>${h.urgent_reason}</span>
+                                </span>
+                                <span class="flex items-center space-x-1">
+                                    <span>🕐</span>
+                                    <span>${formatDate(h.crawl_time)}</span>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="flex flex-col space-y-2 ml-4">
+                            ${!h.urgent_acknowledged ? `
+                                <button onclick="openAckModal(${h.id})" class="px-3 py-2 bg-urgent-600 text-white rounded-lg hover:bg-urgent-700 text-sm">
+                                    ✓ 确认已读
+                                </button>
+                            ` : ''}
+                            <button onclick="showDetail(${h.id})" class="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm">
+                                查看详情
+                            </button>
+                            <a href="${h.url}" target="_blank" class="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 text-sm text-center">
+                                访问原文 ↗
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '未知';
+            const date = new Date(dateStr);
+            return date.toLocaleString('zh-CN');
+        }
+
+        function openAckModal(hotspotId) {
+            currentHotspotId = hotspotId;
+            document.getElementById('ack-modal').classList.remove('hidden');
+            document.getElementById('ack-modal').classList.add('flex');
+        }
+
+        function closeAckModal() {
+            document.getElementById('ack-modal').classList.add('hidden');
+            document.getElementById('ack-modal').classList.remove('flex');
+            currentHotspotId = null;
+        }
+
+        async function confirmAcknowledge() {
+            if (!currentHotspotId) return;
+
+            try {
+                const response = await fetch(`/api/v1/urgent/acknowledge/${currentHotspotId}`, {
+                    method: 'POST'
+                });
+                const result = await response.json();
+
+                if (result.code === 200) {
+                    closeAckModal();
+                    loadUrgentHotspots();
+                    loadStats();
+                } else {
+                    alert(result.message || '确认失败');
+                }
+            } catch (error) {
+                alert('确认失败: ' + error.message);
+            }
+        }
+
+        async function showDetail(hotspotId) {
+            try {
+                const response = await fetch(`/api/v1/hot/detail/${hotspotId}?include_analysis=true`);
+                const result = await response.json();
+
+                if (result.code === 200) {
+                    const h = result.data.hotspot;
+                    const content = document.getElementById('detail-content');
+                    content.innerHTML = `
+                        <div class="flex items-center space-x-2 mb-4">
+                            ${h.is_urgent ? '<span class="px-2 py-1 text-xs font-bold bg-urgent-500 text-white rounded-full">紧急</span>' : ''}
+                            <span class="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded-full">${h.category}</span>
+                            <span class="px-2 py-1 text-xs bg-orange-100 text-orange-700 rounded-full">${h.source}</span>
+                        </div>
+                        <h2 class="text-xl font-bold text-gray-800 mb-4">${h.title}</h2>
+                        <div class="grid grid-cols-2 gap-4 mb-4 text-sm">
+                            <div class="bg-gray-50 p-3 rounded-lg">
+                                <span class="text-gray-500">紧急分数:</span>
+                                <span class="font-bold text-urgent-600 ml-2">${Math.round(h.urgent_score || 0)}</span>
+                            </div>
+                            <div class="bg-gray-50 p-3 rounded-lg">
+                                <span class="text-gray-500">热度分数:</span>
+                                <span class="font-bold text-orange-600 ml-2">${Math.round(h.hot_score)}</span>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <h4 class="font-semibold text-gray-700 mb-2">摘要</h4>
+                            <p class="text-gray-600">${h.summary || '暂无摘要'}</p>
+                        </div>
+                        ${h.ai_analysis ? `
+                            <div class="mb-4">
+                                <h4 class="font-semibold text-gray-700 mb-2">AI分析理由</h4>
+                                <div class="bg-blue-50 p-4 rounded-lg space-y-2 text-sm">
+                                    <p><span class="font-medium">关键词匹配:</span> ${h.ai_analysis.keyword_match_reason}</p>
+                                    <p><span class="font-medium">热度评分:</span> ${h.ai_analysis.hot_score_reason}</p>
+                                    <p><span class="font-medium">情感分析:</span> ${h.ai_analysis.sentiment_reason}</p>
+                                    <p><span class="font-medium">分类理由:</span> ${h.ai_analysis.category_reason}</p>
+                                </div>
+                            </div>
+                        ` : ''}
+                        ${h.urgent_reason ? `
+                            <div class="mb-4">
+                                <h4 class="font-semibold text-gray-700 mb-2">紧急原因</h4>
+                                <p class="text-urgent-600">${h.urgent_reason}</p>
+                            </div>
+                        ` : ''}
+                    `;
+                    document.getElementById('detail-link').href = h.url;
+                    document.getElementById('detail-modal').classList.remove('hidden');
+                    document.getElementById('detail-modal').classList.add('flex');
+                }
+            } catch (error) {
+                alert('加载详情失败: ' + error.message);
+            }
+        }
+
+        function closeDetailModal() {
+            document.getElementById('detail-modal').classList.add('hidden');
+            document.getElementById('detail-modal').classList.remove('flex');
+        }
+
+        async function scanUrgent() {
+            try {
+                const btn = document.querySelector('button[onclick="scanUrgent()"]');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<span class="animate-spin">⏳</span><span>扫描中...</span>';
+                btn.disabled = true;
+
+                const response = await fetch('/api/v1/urgent/scan?hours=24', { method: 'POST' });
+                const result = await response.json();
+
+                if (result.code === 200) {
+                    alert('紧急热点扫描已启动，请稍后刷新查看结果');
+                } else {
+                    alert(result.message || '扫描失败');
+                }
+            } catch (error) {
+                alert('扫描失败: ' + error.message);
+            } finally {
+                const btn = document.querySelector('button[onclick="scanUrgent()"]');
+                btn.innerHTML = '<span>🔍</span><span>扫描紧急热点</span>';
+                btn.disabled = false;
+            }
+        }
+
+        async function pushUrgent() {
+            try {
+                const btn = document.querySelector('button[onclick="pushUrgent()"]');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<span class="animate-spin">⏳</span><span>推送中...</span>';
+                btn.disabled = true;
+
+                const response = await fetch('/api/v1/urgent/push', { method: 'POST' });
+                const result = await response.json();
+
+                if (result.code === 200) {
+                    alert('紧急热点推送任务已启动');
+                } else {
+                    alert(result.message || '推送失败');
+                }
+            } catch (error) {
+                alert('推送失败: ' + error.message);
+            } finally {
+                const btn = document.querySelector('button[onclick="pushUrgent()"]');
+                btn.innerHTML = '<span>📢</span><span>推送未确认</span>';
+                btn.disabled = false;
+            }
+        }
+
+        // 初始化
+        initTheme();
+        setInterval(updateTime, 1000);
+        updateTime();
+        loadStats();
+        loadUrgentHotspots();
+
+        // 每30秒自动刷新
+        setInterval(() => {
+            loadStats();
+            loadUrgentHotspots();
+        }, 30000);
+    </script>
+</body>
+</html>

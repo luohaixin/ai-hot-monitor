@@ -1,0 +1,478 @@
+---
+---
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>监控词管理 - AI热点监控</title>
+    <style>
+        *, *::before, *::after {
+            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+        }
+
+        .dark body {
+            background-color: #0f172a;
+            color: #e2e8f0;
+        }
+
+        .dark .bg-gray-50 {
+            background-color: #0f172a;
+        }
+
+        .dark .bg-white {
+            background-color: #1e293b;
+        }
+
+        .dark .text-gray-800 {
+            color: #f1f5f9;
+        }
+
+        .dark .text-gray-700 {
+            color: #e2e8f0;
+        }
+
+        .dark .text-gray-600 {
+            color: #cbd5e1;
+        }
+
+        .dark .text-gray-500 {
+            color: #94a3b8;
+        }
+
+        .dark .border-gray-200 {
+            border-color: #334155;
+        }
+
+        .dark .border-gray-100 {
+            border-color: #334155;
+        }
+
+        .dark .border-gray-300 {
+            border-color: #475569;
+        }
+
+        .dark .bg-gray-100 {
+            background-color: #334155;
+        }
+
+        .dark .bg-gray-50 {
+            background-color: #1e293b;
+        }
+
+        .dark .hover\:bg-gray-100:hover {
+            background-color: #334155;
+        }
+
+        .dark .hover\:bg-gray-50:hover {
+            background-color: #1e293b;
+        }
+
+        .dark select, .dark input, .dark textarea {
+            background-color: #1e293b;
+            color: #e2e8f0;
+            border-color: #475569;
+        }
+
+        .dark select option {
+            background-color: #1e293b;
+            color: #e2e8f0;
+        }
+
+        .card-shadow {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .keyword-tag {
+            transition: all 0.2s ease;
+        }
+        .keyword-tag:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 主题切换按钮 */
+        .theme-toggle {
+            position: relative;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        .dark .theme-toggle:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .theme-icon {
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            position: absolute;
+        }
+
+        .theme-icon.sun {
+            opacity: 1;
+            transform: rotate(0deg) scale(1);
+        }
+
+        .theme-icon.moon {
+            opacity: 0;
+            transform: rotate(90deg) scale(0.5);
+        }
+
+        .dark .theme-icon.sun {
+            opacity: 0;
+            transform: rotate(-90deg) scale(0.5);
+        }
+
+        .dark .theme-icon.moon {
+            opacity: 1;
+            transform: rotate(0deg) scale(1);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <nav class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center space-x-8">
+                    <a href="/" class="text-xl font-bold text-primary-600">🤖 AI热点监控</a>
+                    <div class="flex space-x-4">
+                        <a href="/" class="text-gray-600 hover:text-primary-600 px-3 py-2">仪表盘</a>
+                        <a href="/hotspots" class="text-gray-600 hover:text-primary-600 px-3 py-2">热点列表</a>
+                        <a href="/urgent" class="text-gray-600 hover:text-urgent-600 px-3 py-2 flex items-center">
+                            <span class="mr-1">🚨</span> 紧急热点
+                        </a>
+                        <a href="/keywords" class="text-primary-600 font-medium px-3 py-2">监控词管理</a>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button id="theme-toggle" class="theme-toggle" onclick="toggleTheme()" title="切换主题">
+                        <svg class="theme-icon sun w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                        </svg>
+                        <svg class="theme-icon moon w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100">
+            <div class="p-6 border-b border-gray-100">
+                <h2 class="text-2xl font-bold text-gray-800">监控词管理</h2>
+                <p class="text-gray-600 mt-2">管理AI热点监控的关键词配置，包括精确匹配、模糊匹配和排除词</p>
+            </div>
+
+            <div id="loading" class="text-center py-20">
+                <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent"></div>
+                <p class="mt-4 text-gray-600">加载中...</p>
+            </div>
+
+            <div id="content" class="hidden">
+                <!-- 添加关键词表单 -->
+                <div class="p-6 border-b border-gray-100">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">添加监控词</h3>
+                    <div class="flex flex-wrap gap-4">
+                        <select id="add-keyword-type" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                            <option value="exact">精确匹配</option>
+                            <option value="fuzzy">模糊匹配</option>
+                            <option value="exclude">排除词</option>
+                        </select>
+                        <input type="text" id="add-keyword-input" placeholder="输入关键词" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                        <button onclick="addKeyword()" class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700">
+                            添加
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 关键词列表 -->
+                <div class="p-6">
+                    <!-- 精确匹配关键词 -->
+                    <div class="mb-8">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold text-gray-700">精确匹配关键词</h3>
+                            <span class="text-sm text-gray-500" id="exact-count">0个</span>
+                        </div>
+                        <div class="flex flex-wrap gap-2" id="exact-keywords"></div>
+                    </div>
+
+                    <!-- 模糊匹配关键词 -->
+                    <div class="mb-8">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold text-gray-700">模糊匹配关键词</h3>
+                            <span class="text-sm text-gray-500" id="fuzzy-count">0个</span>
+                        </div>
+                        <div class="flex flex-wrap gap-2" id="fuzzy-keywords"></div>
+                    </div>
+
+                    <!-- 排除词 -->
+                    <div class="mb-8">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold text-gray-700">排除词</h3>
+                            <span class="text-sm text-gray-500" id="exclude-count">0个</span>
+                        </div>
+                        <div class="flex flex-wrap gap-2" id="exclude-keywords"></div>
+                    </div>
+                </div>
+
+                <!-- 批量操作 -->
+                <div class="p-6 border-t border-gray-100 bg-gray-50">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">批量操作</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">批量更新精确匹配关键词（每行一个）</label>
+                            <textarea id="batch-exact" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500" rows="4"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">批量更新模糊匹配关键词（每行一个）</label>
+                            <textarea id="batch-fuzzy" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500" rows="4"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">批量更新排除词（每行一个）</label>
+                            <textarea id="batch-exclude" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500" rows="4"></textarea>
+                        </div>
+                        <div class="flex justify-end">
+                            <button onclick="batchUpdate()" class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700">
+                                批量更新
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="toast" class="fixed bottom-4 right-4 px-4 py-3 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-50"></div>
+
+    <footer class="bg-white border-t border-gray-200 mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <p class="text-center text-sm text-gray-500">AI热点监控工具 v2.3.0</p>
+        </div>
+    </footer>
+
+    <script>
+        let keywordsData = {
+            exact: [],
+            fuzzy: [],
+            exclude: []
+        };
+
+        // 主题管理
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            }
+        }
+
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        }
+
+        async function loadKeywords() {
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('content').classList.add('hidden');
+
+            try {
+                const response = await fetch('/api/v1/keywords');
+                const result = await response.json();
+
+                if (result.code === 200) {
+                    keywordsData = result.data.keywords;
+                    renderKeywords();
+                    updateBatchTextareas();
+                }
+            } catch (error) {
+                console.error('Failed to load keywords:', error);
+                showToast('加载失败', 'error');
+            } finally {
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('content').classList.remove('hidden');
+            }
+        }
+
+        function renderKeywords() {
+            // 渲染精确匹配关键词
+            const exactContainer = document.getElementById('exact-keywords');
+            document.getElementById('exact-count').textContent = `${keywordsData.exact.length}个`;
+            exactContainer.innerHTML = keywordsData.exact.map(keyword => `
+                <div class="keyword-tag bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm flex items-center">
+                    ${keyword}
+                    <button onclick="removeKeyword('exact', '${keyword}')" class="ml-2 text-blue-500 hover:text-blue-700">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            `).join('');
+
+            // 渲染模糊匹配关键词
+            const fuzzyContainer = document.getElementById('fuzzy-keywords');
+            document.getElementById('fuzzy-count').textContent = `${keywordsData.fuzzy.length}个`;
+            fuzzyContainer.innerHTML = keywordsData.fuzzy.map(keyword => `
+                <div class="keyword-tag bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm flex items-center">
+                    ${keyword}
+                    <button onclick="removeKeyword('fuzzy', '${keyword}')" class="ml-2 text-green-500 hover:text-green-700">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            `).join('');
+
+            // 渲染排除词
+            const excludeContainer = document.getElementById('exclude-keywords');
+            document.getElementById('exclude-count').textContent = `${keywordsData.exclude.length}个`;
+            excludeContainer.innerHTML = keywordsData.exclude.map(keyword => `
+                <div class="keyword-tag bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm flex items-center">
+                    ${keyword}
+                    <button onclick="removeKeyword('exclude', '${keyword}')" class="ml-2 text-red-500 hover:text-red-700">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function updateBatchTextareas() {
+            document.getElementById('batch-exact').value = keywordsData.exact.join('\n');
+            document.getElementById('batch-fuzzy').value = keywordsData.fuzzy.join('\n');
+            document.getElementById('batch-exclude').value = keywordsData.exclude.join('\n');
+        }
+
+        async function addKeyword() {
+            const type = document.getElementById('add-keyword-type').value;
+            const keyword = document.getElementById('add-keyword-input').value.trim();
+
+            if (!keyword) {
+                showToast('请输入关键词', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/v1/keywords/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ type, keyword })
+                });
+
+                const result = await response.json();
+                if (result.code === 200) {
+                    showToast('添加成功', 'success');
+                    document.getElementById('add-keyword-input').value = '';
+                    loadKeywords();
+                } else {
+                    showToast(result.message || '添加失败', 'error');
+                }
+            } catch (error) {
+                console.error('Failed to add keyword:', error);
+                showToast('添加失败', 'error');
+            }
+        }
+
+        async function removeKeyword(type, keyword) {
+            try {
+                const response = await fetch('/api/v1/keywords/remove', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ type, keyword })
+                });
+
+                const result = await response.json();
+                if (result.code === 200) {
+                    showToast('移除成功', 'success');
+                    loadKeywords();
+                } else {
+                    showToast(result.message || '移除失败', 'error');
+                }
+            } catch (error) {
+                console.error('Failed to remove keyword:', error);
+                showToast('移除失败', 'error');
+            }
+        }
+
+        async function batchUpdate() {
+            const exact = document.getElementById('batch-exact').value
+                .split('\n')
+                .map(line => line.trim())
+                .filter(line => line);
+            
+            const fuzzy = document.getElementById('batch-fuzzy').value
+                .split('\n')
+                .map(line => line.trim())
+                .filter(line => line);
+            
+            const exclude = document.getElementById('batch-exclude').value
+                .split('\n')
+                .map(line => line.trim())
+                .filter(line => line);
+
+            try {
+                const response = await fetch('/api/v1/keywords', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ exact, fuzzy, exclude })
+                });
+
+                const result = await response.json();
+                if (result.code === 200) {
+                    showToast('批量更新成功', 'success');
+                    loadKeywords();
+                } else {
+                    showToast(result.message || '批量更新失败', 'error');
+                }
+            } catch (error) {
+                console.error('Failed to batch update:', error);
+                showToast('批量更新失败', 'error');
+            }
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            
+            // 设置样式
+            toast.className = 'fixed bottom-4 right-4 px-4 py-3 rounded-lg shadow-lg transform translate-y-0 opacity-100 transition-all duration-300 z-50';
+            
+            if (type === 'success') {
+                toast.classList.add('bg-green-500', 'text-white');
+            } else if (type === 'error') {
+                toast.classList.add('bg-red-500', 'text-white');
+            } else {
+                toast.classList.add('bg-blue-500', 'text-white');
+            }
+
+            // 3秒后隐藏
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        // 初始化
+        window.addEventListener('DOMContentLoaded', () => {
+            initTheme();
+            loadKeywords();
+        });
+    </script>
+</body>
+</html>

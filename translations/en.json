@@ -1,0 +1,118 @@
+{
+  "app": {
+    "name": "AI Hotspot Monitor",
+    "description": "Intelligent monitoring of AI industry hotspots"
+  },
+  "common": {
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "search": "Search",
+    "refresh": "Refresh",
+    "loading": "Loading...",
+    "success": "Success",
+    "error": "Error",
+    "warning": "Warning",
+    "info": "Info",
+    "yes": "Yes",
+    "no": "No",
+    "submit": "Submit",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "connected": "Connected",
+    "disconnected": "Disconnected"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "hotspots": "Hotspots",
+    "realtime": "Realtime",
+    "urgent": "Urgent",
+    "keywords": "Keywords",
+    "search": "Search",
+    "settings": "Settings",
+    "logout": "Logout"
+  },
+  "hotspot": {
+    "title": "Title",
+    "source": "Source",
+    "category": "Category",
+    "sentiment": "Sentiment",
+    "hot_score": "Hot Score",
+    "views": "Views",
+    "interactions": "Interactions",
+    "publish_time": "Publish Time",
+    "crawl_time": "Crawl Time",
+    "summary": "Summary",
+    "keywords": "Keywords",
+    "ai_analysis": "AI Analysis",
+    "is_urgent": "Urgent",
+    "urgent_score": "Urgent Score",
+    "urgent_reason": "Urgent Reason"
+  },
+  "category": {
+    "technology": "Technology",
+    "policy": "Policy",
+    "product": "Product",
+    "paper": "Paper",
+    "industry": "Industry",
+    "other": "Other"
+  },
+  "sentiment": {
+    "positive": "Positive",
+    "negative": "Negative",
+    "neutral": "Neutral"
+  },
+  "auth": {
+    "login": "Login",
+    "logout": "Logout",
+    "username": "Username",
+    "password": "Password",
+    "login_success": "Login successful",
+    "login_failed": "Login failed",
+    "unauthorized": "Unauthorized",
+    "forbidden": "Forbidden",
+    "invalid_token": "Invalid token",
+    "session_expired": "Session expired"
+  },
+  "crawler": {
+    "status": "Crawler Status",
+    "running": "Running",
+    "stopped": "Stopped",
+    "last_run": "Last Run",
+    "next_run": "Next Run",
+    "trigger": "Trigger Crawl",
+    "data_sources": "Data Sources"
+  },
+  "push": {
+    "channels": "Push Channels",
+    "test": "Test Push",
+    "settings": "Push Settings",
+    "enabled": "Enabled",
+    "disabled": "Disabled"
+  },
+  "export": {
+    "title": "Export Data",
+    "format": "Format",
+    "csv": "CSV",
+    "excel": "Excel",
+    "json": "JSON",
+    "download": "Download",
+    "select_fields": "Select Fields",
+    "date_range": "Date Range",
+    "filters": "Filters"
+  },
+  "messages": {
+    "created": "Created successfully",
+    "updated": "Updated successfully",
+    "deleted": "Deleted successfully",
+    "operation_failed": "Operation failed",
+    "confirm_delete": "Confirm delete?",
+    "no_data": "No data",
+    "load_error": "Failed to load"
+  }
+}

@@ -1,0 +1,477 @@
+ai_service:
+  api_key: sk-rFrhtfNtEdQIsKpxruJ2b6J0JiWMLVtIeU2RexlKeMp3Bz1T
+  enabled: true
+  max_tokens: 500
+  min_relevance: 30
+  model: moonshot-v1-8k
+  provider: moonshot
+  require_keyword_mention: true
+  temperature: 0.2
+app:
+  debug: false
+  host: 0.0.0.0
+  name: AI热点监控工具
+  port: 8000
+  version: 3.1.0
+categories:
+- keywords:
+  - 算法
+  - 模型
+  - 框架
+  - 代码
+  - 开源
+  - 论文
+  - 研究
+  name: 技术
+- keywords:
+  - 政策
+  - 法规
+  - 监管
+  - 标准
+  - 政府
+  - 工信部
+  name: 政策
+- keywords:
+  - 发布
+  - 上线
+  - 产品
+  - 应用
+  - 平台
+  - 工具
+  name: 产品
+- keywords:
+  - 论文
+  - ArXiv
+  - 期刊
+  - 会议
+  - CVPR
+  - NeurIPS
+  - ICML
+  name: 论文
+- keywords:
+  - 医疗
+  - 金融
+  - 教育
+  - 自动驾驶
+  - 机器人
+  - 制造
+  name: 行业应用
+data_sources:
+  aiera:
+    detail:
+      concurrency: 3
+      content_selector: .entry-content, .post-content, article
+      delay: 2
+      enabled: true
+    enabled: true
+    interval: 60
+    name: 新智元
+    selectors:
+      container: article, .post-item, .entry
+      link: h2 a, h3 a, .entry-title a
+      summary: .entry-summary, .post-excerpt, p
+      time: time, .entry-date, .published
+      title: h2 a, h3 a, .entry-title
+    url: https://aiera.com.cn
+  csdn:
+    detail:
+      concurrency: 2
+      content_selector: .article-content,
+      delay: 3
+      enabled: true
+    enabled: true
+    interval: 60
+    name: CSDN AI
+    selectors:
+      container: .article-item, .blog-item, .list-item
+      link: a[href*="/article/"], h2 a, h3 a
+      summary: .summary, .desc, .abstract
+      time: time, .date, .time
+      title: .title, h2 a, h3 a
+    url: https://www.csdn.net/nav/ai
+  github:
+    detail:
+      concurrency: 2
+      content_selector: .readme article
+      delay: 2
+      enabled: false
+    enabled: true
+    interval: 120
+    name: GitHub Trending
+    selectors:
+      container: .Box-row
+      link: h2 a
+      stars: a.Link--muted
+      summary: p.col-9
+      title: h2 a
+    url: https://github.com/trending?l=python&since=daily
+  github_ai_agents:
+    detail:
+      concurrency: 2
+      content_selector: .repository-content, .readme
+      delay: 2
+      enabled: true
+    enabled: true
+    interval: 120
+    name: GitHub AI Agents
+    selectors:
+      container: article.border, .Box-row
+      link: h3 a
+      stars: a.Link--muted
+      summary: p.color-fg-muted
+      title: h3 a
+    url: https://github.com/topics/ai-agents
+  infoq:
+    detail:
+      concurrency: 3
+      content_selector: .article-content, .content, article
+      delay: 2
+      enabled: true
+    enabled: true
+    interval: 60
+    name: InfoQ AI
+    selectors:
+      container: .article-item, .news-item, .item
+      link: a[href*="/article/"], h2 a, h3 a
+      summary: .summary, .desc, .abstract, p
+      time: time, .date
+      title: .title, h2 a, h3 a
+    url: https://www.infoq.cn/ai
+  jiqizhixin:
+    detail:
+      concurrency: 3
+      content_selector: .article-content, .post-content, article, .content
+      delay: 2
+      enabled: true
+    enabled: true
+    interval: 30
+    name: 机器之心
+    selectors:
+      container: .article-item, .article-card, .post-item
+      link: a[href*="/articles/"], h2 a, h3 a
+      summary: .article-summary, .desc, .excerpt, p
+      time: .article-time, time, .date
+      title: .article-title, h2 a, h3 a
+    url: https://www.jiqizhixin.com/articles
+  juejin:
+    detail:
+      concurrency: 3
+      content_selector: .article-content, .markdown-body, article
+      delay: 2
+      enabled: true
+    enabled: true
+    interval: 45
+    name: 掘金AI
+    selectors:
+      container: .article-item, .entry-list-item, .content-entry
+      link: a[href*="/post/"], .title a
+      summary: .abstract, .desc, .summary
+      time: time, .date, .time
+      title: .title, h2 a, h3 a
+    url: https://juejin.cn/ai
+  kr36:
+    detail:
+      concurrency: 3
+      content_selector: .article-content, .article-detail, article
+      delay: 2
+      enabled: true
+    enabled: true
+    interval: 60
+    name: 36氪
+    selectors:
+      container: .article-item, .article-card, .article-wrapper
+      link: a[href*="/p/"], h2 a
+      summary: .article-desc, .desc, .summary
+      time: .article-time, time, .date
+      title: .article-title, h2 a
+    url: https://36kr.com/search/articles/人工智能
+  oschina:
+    detail:
+      concurrency: 3
+      content_selector: .article-content, .content,
+      delay: 2
+      enabled: true
+    enabled: true
+    interval: 60
+    name: 开源中国AI
+    selectors:
+      container: .blog-item, .news-item, .item
+      link: a[href*="/article/"], h2 a
+      summary: .summary, .desc, .abstract
+      time: time, .date
+      title: .title, h2 a
+    url: https://www.oschina.net/ai
+  qbitai:
+    detail:
+      concurrency: 3
+      content_selector: .entry-content, .post-content, .article-content
+      delay: 2
+      enabled: true
+    enabled: true
+    interval: 60
+    name: 量子位
+    selectors:
+      container: .picture_text
+      link: .text_box h4 a
+      summary: .text_box p
+      time: .time
+      title: .text_box h4 a
+    url: https://www.qbitai.com
+  segmentfault:
+    detail:
+      concurrency: 2
+      content_selector: .article-content, .post-content, article
+      delay: 2
+      enabled: true
+    enabled: true
+    interval: 60
+    name: 思否AI
+    selectors:
+      container: .article-item, .news-item, .post-item
+      link: a[href*="/a/"], h2 a
+      summary: .summary, .excerpt, .desc
+      time: time, .date
+      title: .title, h2 a
+    url: https://segmentfault.com/t/人工智能
+  syncedreview:
+    detail:
+      concurrency: 3
+      content_selector: .entry-content, .post-content, article
+      delay: 2
+      enabled: true
+    enabled: true
+    interval: 60
+    name: 机器之心英文版
+    selectors:
+      container: article, .post, .entry
+      link: h2 a, h3 a, .entry-title a
+      summary: .entry-summary, .post-excerpt, p
+      time: time, .entry-date, .published
+      title: h2 a, h3 a, .entry-title
+    url: https://www.syncedreview.com
+  zhihu:
+    detail:
+      concurrency: 2
+      content_selector: .RichContent-inner
+      delay: 3
+      enabled: true
+    enabled: true
+    interval: 30
+    name: 知乎AI
+    selectors:
+      container: .ContentItem
+      link: a
+      summary: .RichContent-inner
+      time: time
+      title: h2.ContentItem-title
+    url: https://www.zhihu.com/topic/19559450/hot
+database:
+  redis:
+    db: 0
+    host: localhost
+    password: null
+    port: 6379
+  sqlite:
+    path: data/hotspots.db
+email:
+  auto_notify: true
+  enabled: true
+  from_name: AI热点监控
+  include_summary: true
+  min_hotspots_to_notify: 1
+  notify_on_high: false
+  notify_on_urgent: true
+  notify_on_urgent_only: false
+  password: zhqejmwslktreadf
+  recipients:
+  - 2499453358@qq.com
+  send_batch: true
+  smtp_port: 465
+  smtp_server: smtp.qq.com
+  use_tls: true
+  username: 2499453358@qq.com
+general:
+  hot_score_threshold: 30
+  monitor_interval: 30
+hot_score:
+  decay_factor: 0.95
+  threshold: 30
+  weights:
+    interactions: 0.4
+    time_decay: 0.2
+    views: 0.4
+keywords:
+  exact:
+  - AI
+  - 人工智能
+  - 机器学习
+  - 深度学习
+  - 神经网络
+  - 大模型
+  - LLM
+  - GPT
+  - ChatGPT
+  - Claude
+  - Gemini
+  - AIGC
+  - 生成式AI
+  - AI芯片
+  - 自动驾驶
+  - 计算机视觉
+  - 自然语言处理
+  - NLP
+  - 多模态
+  - 强化学习
+  - Transformer
+  - BERT
+  - OpenAI
+  - Anthropic
+  - Google AI
+  - Meta AI
+  - 智能AI
+  exclude:
+  - 游戏AI
+  - AI换脸
+  - AI诈骗
+  - AI算命
+  fuzzy:
+  - 模型
+  - 算法
+  - 训练
+  - 推理
+  - 智能
+  - 算法
+  - 模型训练
+  - 推理
+  - 算力
+  - 数据标注
+logging:
+  file: logs/app.log
+  format: '{time:YYYY-MM-DD HH:mm:ss} | {level} | {name} | {message}'
+  level: INFO
+  retention: 30 days
+  rotation: 1 day
+network:
+  proxy:
+    bypass:
+    - '*.zhihu.com'
+    - '*.juejin.cn'
+    - '*.csdn.net'
+    - '*.bilibili.com'
+    - '*.weibo.com'
+    - '*.sogou.com'
+    - '*.moonshot.cn'
+    - '*.baidu.com'
+    - '*.qq.com'
+    enabled: auto
+    http: ''
+    https: ''
+notifications:
+  daily_digest: true
+  new_hotspot_push: true
+  urgent_reminder: true
+  websocket_enabled: true
+push:
+  dingtalk:
+    enabled: false
+    secret: ''
+    webhook_url: ''
+  email:
+    enabled: true
+    password: zhqejmwslktreadf
+    recipients:
+    - 2499453358@qq.com
+    smtp_port: 465
+    smtp_server: smtp.qq.com
+    username: 2499453358@qq.com
+  enabled: true
+  feishu:
+    enabled: false
+    webhook_url: ''
+  mode: threshold
+  ntfy:
+    enabled: true
+    server: https://ntfy.sh
+    topic: ai-hot-monitor
+  telegram:
+    bot_token: ''
+    chat_id: ''
+    enabled: false
+  wecom:
+    enabled: false
+    mention_users: []
+    webhook_url: ''
+sentiment:
+  engine: simple
+  negative_words:
+  - 失败
+  - 问题
+  - 风险
+  - 争议
+  - 下降
+  - 裁员
+  - 亏损
+  positive_words:
+  - 突破
+  - 创新
+  - 领先
+  - 成功
+  - 获奖
+  - 优秀
+  - 提升
+  - 增长
+social_sources:
+  bilibili:
+    enabled: true
+    interval: 3
+    max_results: 20
+  bing:
+    enabled: true
+    interval: 5
+    max_results: 20
+  hackernews:
+    enabled: true
+    max_results: 20
+  sogou:
+    enabled: true
+    interval: 5
+    max_results: 20
+  twitter:
+    api_key: ''
+    enabled: false
+    max_results: 20
+  weibo:
+    enabled: true
+    interval: 3
+    max_results: 20
+system:
+  backup:
+    enabled: true
+    interval: 1 day
+    keep_count: 7
+  concurrency:
+    max_workers: 5
+    request_timeout: 30
+    retry_delay: 2
+    retry_times: 3
+urgent_hotspot:
+  auto_push: true
+  enabled: true
+  high_score_threshold: 200
+  keywords:
+  - 突发
+  - 紧急
+  - 重磅
+  - 重大
+  - 震惊
+  - 突破
+  - OpenAI发布
+  - GPT-5
+  - AGI
+  - 里程碑
+  remind_interval_minutes: 30
+  urgent_threshold: 60
+websocket:
+  enabled: true
+  max_history: 100
+  ping_interval: 25

@@ -377,13 +377,12 @@ push:
     secret: ''
     webhook_url: ''
   email:
-    enabled: true
-    password: zhqejmwslktreadf
-    recipients:
-    - 2499453358@qq.com
+    enabled: false
+    password: ''
+    recipients: []
     smtp_port: 465
-    smtp_server: smtp.qq.com
-    username: 2499453358@qq.com
+    smtp_server: ''
+    username: ''
   enabled: true
   feishu:
     enabled: false

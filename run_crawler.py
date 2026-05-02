@@ -151,34 +151,16 @@ def run_crawler_job():
         logger.info(f"   - 详情页抓取: {stats.get('detail_crawl', {}).get('saved', 0)} 条")
         logger.info(f"   - 社交媒体: {stats.get('social_crawl', {}).get('total', 0)} 条")
         logger.info(f"   - AI分析: {stats.get('ai_analysis', {}).get('total', 0)} 条")
-        logger.info("=" * 60)
+        logger.info(f"   - 新热点: {stats.get('total_new', 0)} 条")
         
-        # 发送邮件通知
-        if email_service and stats:
-            try:
-                email_notify = EmailNotificationService(email_service)
-                email_stats = {
-                    'total_crawled': stats.get('list_crawl', {}).get('saved', 0),
-                    'new_hotspots': stats.get('total_new', 0),
-                    'ai_analyzed': stats.get('ai_analysis', {}).get('total', 0),
-                    'crawl_time': datetime.now()
-                }
-                # 获取新增的热点
-                from core.models import get_db
-                from sqlalchemy import desc
-                from core.models import HotspotORM
-                
-                db_gen = get_db()
-                db_session = next(db_gen)
-                
-                new_hotspots = db_session.query(HotspotORM).order_by(
-                    desc(HotspotORM.created_at)
-                ).limit(email_stats['new_hotspots']).all()
-                
-                email_notify.on_crawl_completed(email_stats, new_hotspots)
-                logger.info("📧 邮件通知已发送")
-            except Exception as e:
-                logger.error(f"❌ 邮件通知发送失败: {e}")
+        # 检查邮件通知状态
+        email_notification = stats.get('email_notification', {})
+        if email_notification.get('sent'):
+            logger.info(f"📧 邮件通知已发送: {email_notification.get('message', '')}")
+        else:
+            logger.info(f"📧 邮件通知: {email_notification.get('message', '未发送')}")
+        
+        logger.info("=" * 60)
         
         return 0  # 成功
         

@@ -51,12 +51,6 @@ AI领域热点监控与分析平台，自动抓取多源AI资讯，通过AI筛�
 - **灵活控制**：支持启动、停止、重启监控服务
 - **动态调整**：可实时修改监控间隔，无需重启服务
 
-### 6. 用户认证与权限管理 (P3)
-- **JWT认证**：Access Token + Refresh Token 双令牌机制
-- **RBAC权限**：viewer/operator/admin 三种角色
-- **密码加密**：bcrypt 哈希存储
-- **默认用户**：admin/admin123（管理员）、viewer/viewer123（只读）
-
 ### 7. 多语言支持 (P3)
 - **支持语言**：简体中文 (zh-CN)、英文 (en)、繁体中文 (zh-TW)
 - **自动检测**：HTTP Accept-Language 头
@@ -144,13 +138,6 @@ cd ai-hot-monitor/client && npm run dev
 | http://localhost:8000/redoc | API文档 (ReDoc) |
 | http://localhost:8000/api/v1/health | 健康检查 |
 | http://localhost:8000/api/v1/system/status | 系统状态 |
-
-### 默认登录账号
-
-| 用户名 | 密码 | 角色 |
-|--------|------|------|
-| admin | admin123 | 管理员 |
-| viewer | viewer123 | 只读用户 |
 
 ### 环境变量配置
 
@@ -422,7 +409,6 @@ ai-hot-monitor/
 │   └── config.yaml              # 配置文件
 ├── core/                        # 核心业务层
 │   ├── ai_service.py            # AI分析服务 (V3.1)
-│   ├── auth.py                  # 用户认证与权限管理
 │   ├── config_loader.py         # 配置加载
 │   ├── email_service.py         # 邮件服务 (V3.1)
 │   ├── email_notification_service.py  # 邮件通知自动化 (V3.1)
@@ -521,7 +507,7 @@ docker-compose down
 - **V2.2.0**：监控词管理界面
 - **V2.3.0**：深色主题优化和AI分析理由展示
 - **V2.4.0**：紧急热点监控功能
-- **V3.0.0**：用户认证、多语言支持、数据导出
+- **V3.0.0**：多语言支持、数据导出
 - **V3.1.0**：前端重构为React+Vite、WebSocket实时通知、OpenRouter AI分析、社交媒体数据源扩展、邮件通知服务
 - **V3.1.5**：新增机器之心英文版/新智元/量子位/GitHub AI-Agents数据源、优化热度计算算法
 - **V3.1.14**：新增定时监控服务管理与状态显示、完善设置模块所有选项卡功能

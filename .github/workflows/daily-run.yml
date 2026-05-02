@@ -37,7 +37,6 @@ jobs:
     - name: Run AI Hotspot Monitor
       env:
         # AI服务配置 (OpenRouter 或 Moonshot)
-        OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
         MOONSHOT_API_KEY: ${{ secrets.MOONSHOT_API_KEY }}
         # 邮件服务配置
         EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}

@@ -249,7 +249,7 @@ def create_app():
     ai_config = config.ai_service_config
     
     # 根据 provider 选择对应的环境变量
-    provider = ai_config.get('provider', 'openrouter')
+    provider = ai_config.get('provider', 'moonshot')
     if provider in ['moonshot', 'kimi']:
         ai_api_key = os.getenv("MOONSHOT_API_KEY") or ai_config.get('api_key')
         provider_name = "Moonshot (Kimi)"

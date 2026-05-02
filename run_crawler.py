@@ -58,7 +58,7 @@ def init_services():
     # 初始化AI服务
     config = get_config()
     ai_config = config.ai_service_config
-    provider = ai_config.get('provider', 'openrouter')
+    provider = ai_config.get('provider', 'moonshot')
     
     if provider in ['moonshot', 'kimi']:
         ai_api_key = os.getenv("MOONSHOT_API_KEY") or ai_config.get('api_key')

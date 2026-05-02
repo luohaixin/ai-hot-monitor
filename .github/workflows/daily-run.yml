@@ -36,7 +36,10 @@ jobs:
 
     - name: Run AI Hotspot Monitor
       env:
+        # AI服务配置 (OpenRouter 或 Moonshot)
         OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        MOONSHOT_API_KEY: ${{ secrets.MOONSHOT_API_KEY }}
+        # 邮件服务配置
         EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
         EMAIL_SMTP_SERVER: ${{ secrets.EMAIL_SMTP_SERVER }}
         EMAIL_SMTP_PORT: ${{ secrets.EMAIL_SMTP_PORT }}
@@ -44,9 +47,10 @@ jobs:
         EMAIL_USE_TLS: ${{ secrets.EMAIL_USE_TLS }}
         EMAIL_FROM_NAME: ${{ secrets.EMAIL_FROM_NAME }}
         EMAIL_RECIPIENTS: ${{ secrets.EMAIL_RECIPIENTS }}
-        # 添加其他需要的环境变量
+        # 其他可选配置
+        TWITTER_API_KEY: ${{ secrets.TWITTER_API_KEY }}
       run: |
-        python main.py
+        python run_crawler.py
 
     - name: Upload artifacts
       if: always()

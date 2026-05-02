@@ -41,8 +41,9 @@ jobs:
         EMAIL_SMTP_SERVER: ${{ secrets.EMAIL_SMTP_SERVER }}
         EMAIL_SMTP_PORT: ${{ secrets.EMAIL_SMTP_PORT }}
         EMAIL_USERNAME: ${{ secrets.EMAIL_USERNAME }}
-        # 如果需要收件人邮箱，可以添加：
-        # EMAIL_RECEIVER: ${{ secrets.EMAIL_RECEIVER }}
+        EMAIL_USE_TLS: ${{ secrets.EMAIL_USE_TLS }}
+        EMAIL_FROM_NAME: ${{ secrets.EMAIL_FROM_NAME }}
+        EMAIL_RECIPIENTS: ${{ secrets.EMAIL_RECIPIENTS }}
         # 添加其他需要的环境变量
       run: |
         python main.py
